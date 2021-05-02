@@ -9,6 +9,7 @@ import collections
 import heapq
 import operator, math, pprint
 from collections import defaultdict
+import time
 
 
 def path_and_weight(G, path):
@@ -51,7 +52,8 @@ def solve(G):
         shortest_path = nx.shortest_path(G, s, t, weight="weight", method='dijkstra') # with probability p, skip this path
         shortest_path_as_nodes = shortest_path[1:-1]
         heuristic = k_short_path_heuristic(G, s, t, k=10, edge=False, show_data=False)
-        artic_points = nx.articulation_points(G) # maybe turn into set for potential speed increase
+        artic_points = list(nx.articulation_points(G)) # maybe turn into set for potential speed increase
+        #print(artic_points)
 
         node_removed = False
         while not node_removed and shortest_path_as_nodes:
@@ -61,7 +63,7 @@ def solve(G):
             if target not in artic_points:
                 node_removed = True
                 G.remove_node(target)
-                print(str(target) + " was removed")
+                #print(str(target) + " was removed")
                 c.append(target)
                 assert nx.is_connected(G), 'should still be connected' # REMOVE THIS LINE eventually
                 assert target != s, 'cannot remove source'
@@ -82,7 +84,7 @@ def solve(G):
             G.remove_edge(target[0], target[1])
             if nx.is_connected(G):
                 edge_removed = True
-                print(str(target) + " was removed")
+                #print(str(target) + " was removed")
                 k.append(target)
             else:
                 G.add_edge(target[0], target[1], weight=weight)
@@ -161,27 +163,35 @@ def make_valid_graph(n, path):
     return g
 
 
-if __name__ == '__main__':
-    # assert len(sys.argv) == 2
-    # path = sys.argv[1]
-    # G = read_input_file(path)
-    a = make_valid_graph(8, "a.in")
-    print(list(a.edges(data=True)))
-
-    c, k = solve(a.copy())
-    assert is_valid_solution(a, c, k)
-    print("Shortest Path Difference: {}".format(calculate_score(a, c, k)))
+# if __name__ == '__main__':
+#     # assert len(sys.argv) == 2
+#     # path = sys.argv[1]
+#     # G = read_input_file(path)
+#     #a = make_valid_graph(8, "a.in")
+#     #print(list(a.edges(data=True)))
+#     a = read_input_file("inputs/medium/medium-221.in")
+#     plot_graph(a)
+#
+#     c, k = solve(a.copy())
+#     assert is_valid_solution(a, c, k)
+#     print("Shortest Path Difference: {}".format(calculate_score(a, c, k)))
 
     # write_output_file(G, c, k, 'outputs/small-1.out')
 
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
 # if __name__ == '__main__':
-#     inputs = glob.glob('inputs/*')
+#     inputs = glob.glob('inputs/large/*')
+#     counter = 1
+#     t0 = time.time()
 #     for input_path in inputs:
-#         output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
+#         print("reading graph " + str(counter) + "/300")
+#         output_path = 'outputs/large/' + basename(normpath(input_path))[:-3] + '.out'
 #         G = read_input_file(input_path)
-#         c, k = solve(G)
+#         c, k = solve(G.copy())
 #         assert is_valid_solution(G, c, k)
 #         distance = calculate_score(G, c, k)
 #         write_output_file(G, c, k, output_path)
+#         counter += 1
+#         if counter % 50 == 0:
+#             print(str(time.time() - t0) + " seconds elapsed.")
