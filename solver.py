@@ -163,10 +163,13 @@ def make_valid_graph(n, path):
     return g
 
 
-# if __name__ == '__main__':
-#     # assert len(sys.argv) == 2
-#     # path = sys.argv[1]
-#     # G = read_input_file(path)
+if __name__ == '__main__':
+    assert len(sys.argv) == 2
+    path = sys.argv[1]
+    G = read_input_file(path)
+    c, k = solve(G.copy())
+    score= calculate_score(G, c, k)
+    print(score)
 #     #a = make_valid_graph(8, "a.in")
 #     #print(list(a.edges(data=True)))
 #     a = read_input_file("inputs/medium/medium-221.in")

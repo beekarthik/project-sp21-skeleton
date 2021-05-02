@@ -50,10 +50,10 @@ def read_input_file(path, min_size=None, max_size=None):
 
         for node, val in G.degree():
             assert val >= 2, 'Every vertex in the input graph should have degree atleast 2'
-            
+
         if min_size is not None:
             assert min_size < len(G), 'Graph doesn\'t have enough nodes for it\'s size'
-            
+
         if max_size is not None:
             assert len(G) <= max_size, 'Graph has too many nodes for it\'s size'
 
@@ -79,7 +79,6 @@ def write_input_file(G, path):
 def read_output_file(G, path):
     """
     Parses and validates an output file
-
     Args:
         G: input graph corresponding to input file
         path: str, path to output file
@@ -87,12 +86,64 @@ def read_output_file(G, path):
         score: the difference between the new and original shortest path
     """
     H = G.copy()
-    if len(H) >= 20 and len(H) <= 30:  ### check this out !!! max_cities = 1 or 2?
-        max_cities = 2
+    if len(H) >= 20 and len(H) <= 30:
+        max_cities = 1
         max_roads = 15
     elif len(H) > 30 and len(H) <= 50:
         max_cities = 3
-        max_roads = 30
+        max_roads = 50
+    elif len(H) > 50 and len(H) <= 100:
+        max_cities = 5
+        max_roads = 100
+    else:
+        print('Input Graph is not of a valid size')
+
+    assert H.has_node(0), 'Source vertex is missing in input graph'
+    assert H.has_node(len(G) - 1), 'Target vertex is missing in input graph'
+
+    cities = []
+    removed_edges = []
+
+    with open(path, "r") as fo:
+
+        number_of_cities = fo.readline().strip()
+        assert number_of_cities.isdigit(), 'Number of cities is not a digit'
+        number_of_cities = int(number_of_cities)
+
+        assert number_of_cities <= max_cities, 'Too many cities being removed from input graph'
+
+        for _ in range(number_of_cities):
+            city = fo.readline().strip()
+            assert city.isdigit(), 'Specified vertex is not a digit'
+            city = int(city)
+            assert H.has_node(city), 'Specified vertex is not in input graph'
+            cities.append(city)
+
+        number_of_roads = fo.readline().strip()
+        assert number_of_roads.isdigit(), 'Number of roads is not a digit'
+        number_of_roads = int(number_of_roads)
+
+        assert number_of_roads <= max_roads, 'Too many roads being removed from input graph'
+
+        for _ in range(number_of_roads):
+            road = fo.readline().split()
+            assert len(road) == 2, 'An edge must be specified with a start and end vertex'
+            assert road[0].isdigit() and road[1].isdigit()
+            u = int(road[0])
+            v = int(road[1])
+            assert H.has_edge(u, v), 'Specified edge is not in input graph'
+            removed_edges.append((u,v))
+
+    return utils.calculate_score(G, cities, removed_edges)
+
+def read_output_file2(G, path):
+    H = G.copy()
+    if len(H) >= 20 and len(H) <= 30:  ### check this out !!! max_cities = 1 or 2?
+        max_cities = 1
+        max_roads = 15
+    elif len(H) > 30 and len(H) <= 50:
+        max_cities = 3
+        max_roads = 50
     elif len(H) > 50 and len(H) <= 100:
         max_cities = 5
         max_roads = 100
@@ -135,7 +186,8 @@ def read_output_file(G, path):
             assert H.has_edge(u, v), 'Specified edge is not in input graph'
             removed_edges.append((u,v))
 
-    return utils.calculate_score(G, cities, removed_edges)
+    return (utils.calculate_score(G, cities, removed_edges), cities, removed_edges)
+
 
 
 def write_output_file(G, c, k, path):
@@ -154,7 +206,7 @@ def write_output_file(G, c, k, path):
     for road in k:
         assert H.has_edge(road[0],road[1]), "{} is not a valid edge in graph G".format(road)
     H.remove_edges_from(k)
-    
+
     for city in c:
         assert H.has_node(city), "{} is not a valid node in graph G".format(city)
     H.remove_nodes_from(c)
