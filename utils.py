@@ -10,7 +10,7 @@ def is_valid_graph(g):
     b2 = True
     for node, val in g.degree():
         if val < 2:
-            b2 = True
+            b2 = False
             break
 
     return b1 and b2
