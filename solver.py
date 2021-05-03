@@ -143,7 +143,7 @@ if __name__ == '__main__':
         input_file = f'inputs/small/{graph_name}.in'
         output_file = f'outputs/small/{graph_name}.out'
         g = read_input_file(input_file)
-        score, c, k = complete_search_mt(g, 10000)
+        score, c, k = complete_search_mt(g, 20000)
 
         if score > best_score:
             print("monte carlo gave better score for graph " + str(graph_name))
@@ -163,4 +163,3 @@ if __name__ == '__main__':
             print("monte carlo gave better score for graph " + str(graph_name))
             write_output_file(g, c, k, output_file)
 
-    print(complete_search_mt(read_input_file('inputs/small/small-1.in'), 10000))
