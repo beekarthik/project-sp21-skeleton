@@ -1,16 +1,16 @@
 import networkx as nx
 from parse import read_input_file, write_output_file, write_input_file
 from utils import *
-import sys
+import sys, glob
 from os.path import basename, normpath
-import glob
-import random
-import collections
-import heapq
+import random, heapq
 import operator, math, pprint
 from collections import defaultdict
 import time
 from curr_score import *
+from multiprocessing import *
+
+best_sols = get_best_sols_data()
 
 
 def path_and_weight(G, path):
@@ -198,59 +198,66 @@ def make_valid_graph(n, path):
     return g
 
 
+def meta_heuristic_bash(folder, file):
+    graph_name = file.split('.')[0]
+    print(graph_name)
+    input_file = f'inputs/{folder}/{graph_name}.in'
+    output_file = f'outputs/{folder}/{graph_name}.out'
+
+    if best_sols[graph_name]['ranking'] == 1:
+        return
+
+    best_score = best_sols[graph_name]['score']
+    best_c = []
+    best_k = []
+    score_change = False
+    G = read_input_file(input_file)
+
+    for i in range(1, 6):
+        for b in range(8):
+            # 000, 001, 010, 011, 100, 101, 110, 111
+            c, k = solve(G.copy(), 3*i, 3*i, b)
+            new_score = calculate_score(G, c, k)
+            if new_score > best_score:
+                print("b was " + str(b) + " and gave improvement")
+                best_score = new_score
+                best_c = c
+                best_k = k
+                score_change = True
+
+
+    # for i in range(10):
+    #     for j in range(10):
+    #         print((i, j))
+    #         c, k = solve(G.copy(), i, j)
+    #         new_score = calculate_score(G, c, k)
+    #         if new_score > best_score:
+    #             best_score = new_score
+    #             best_c = c
+    #             best_k = k
+    #             score_change = True
+
+    if score_change:
+        write_output_file(G, best_c, best_k, output_file)
+
+
+
+
 if __name__ == '__main__':
     assert len(sys.argv) == 2
     path = sys.argv[1]
     if path == "all":
-
-        best_sols = get_best_sols_data()
-
+        pool = Pool()
         for folder in os.listdir("inputs"):
             for file in os.listdir(f'inputs/{folder}'):
                 try:
-                    graph_name = file.split('.')[0]
-                    print(graph_name)
-                    input_file = f'inputs/{folder}/{graph_name}.in'
-                    output_file = f'outputs/{folder}/{graph_name}.out'
+                    pool.apply_async(meta_heuristic_bash, [folder, file])
 
-                    if best_sols[graph_name]['ranking'] == 1:
-                        continue
-
-                    best_score = best_sols[graph_name]['score']
-                    best_c = []
-                    best_k = []
-                    score_change = False
-                    G = read_input_file(input_file)
-
-                    for i in range(1, 6):
-                        for b in range(8):
-                            # 000, 001, 010, 011, 100, 101, 110, 111
-                            c, k = solve(G.copy(), 3*i, 3*i, b)
-                            new_score = calculate_score(G, c, k)
-                            if new_score > best_score:
-                                #print("b was " + str(b) + " and gave improvement")
-                                best_score = new_score
-                                best_c = c
-                                best_k = k
-                                score_change = True
-
-
-                    # for i in range(10):
-                    #     for j in range(10):
-                    #         print((i, j))
-                    #         c, k = solve(G.copy(), i, j)
-                    #         new_score = calculate_score(G, c, k)
-                    #         if new_score > best_score:
-                    #             best_score = new_score
-                    #             best_c = c
-                    #             best_k = k
-                    #             score_change = True
-
-                    if score_change:
-                        write_output_file(G, best_c, best_k, output_file)
-                        
                 except Exception:
                     continue
+
+        pool.close()
+        pool.join()
 
     else:
         G = read_input_file(path)
