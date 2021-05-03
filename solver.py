@@ -34,7 +34,7 @@ def get_budget(n):
         return 5, 100
 
 
-def solve(G, n, e):
+def solve(G, n, e, b):
     """
     Args:
         G: networkx.Graph
@@ -50,11 +50,32 @@ def solve(G, n, e):
     node_budget, edge_budget = get_budget(G.number_of_nodes())
 
     for i in range(node_budget):
+        if b == 1:
+            if i == 0:
+                continue
+        elif b == 2:
+            if i == 1:
+                continue
+        elif b == 3:
+            if i == 0 or i == 1:
+                continue
+        elif b == 4:
+            if i == 2:
+                continue
+        elif b == 5:
+            if i == 0 or i == 2:
+                continue
+        elif b == 6:
+            if i == 1 or i == 2:
+                continue
+        elif b == 7:
+            if i == 0 or i == 1 or i == 2:
+                continue
+
         shortest_path = nx.shortest_path(G, s, t, weight="weight", method='dijkstra') # with probability p, skip this path
         shortest_path_as_nodes = shortest_path[1:-1]
         heuristic = k_short_path_heuristic(G, s, t, k=n, edge=False, show_data=False)
         artic_points = list(nx.articulation_points(G)) # maybe turn into set for potential speed increase
-        #print(artic_points)
 
         node_removed = False
         while not node_removed and shortest_path_as_nodes:
@@ -64,15 +85,35 @@ def solve(G, n, e):
             if target not in artic_points:
                 node_removed = True
                 G.remove_node(target)
-                #print(str(target) + " was removed")
                 c.append(target)
-                assert nx.is_connected(G), 'should still be connected' # REMOVE THIS LINE eventually
+                # assert nx.is_connected(G), 'should still be connected' # REMOVE THIS LINE eventually
                 assert target != s, 'cannot remove source'
                 assert target != t, 'cannot remove sink'
             else:
                 shortest_path_as_nodes.remove(target)
 
     for i in range(edge_budget):
+        if b == 1:
+            if i == 1:
+                continue
+        elif b == 2:
+            if i == 2:
+                continue
+        elif b == 3:
+            if i == 1 or i == 2:
+                continue
+        elif b == 4:
+            if i == 3:
+                continue
+        elif b == 5:
+            if i == 1 or i == 3:
+                continue
+        elif b == 6:
+            if i == 2 or i == 3:
+                continue
+        elif b == 7:
+            if i == 1 or i == 2 or i == 3:
+                continue
         shortest_path = nx.shortest_path(G, s, t, weight="weight", method='dijkstra') # with probability p, skip this path
         shortest_path_as_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(0, len(shortest_path) - 1)]
         heuristic = k_short_path_heuristic(G, s, t, k=e, edge=True)
@@ -85,12 +126,10 @@ def solve(G, n, e):
             G.remove_edge(target[0], target[1])
             if nx.is_connected(G):
                 edge_removed = True
-                #print(str(target) + " was removed")
                 k.append(target)
             else:
                 G.add_edge(target[0], target[1], weight=weight)
 
-    #print(path_and_weight(G, nx.shortest_path(G, s, t, weight="weight", method='dijkstra')))
     return c, k
 
 
@@ -118,13 +157,11 @@ def k_short_path_heuristic(G, s, t, k=10, edge=True, show_data=False):
             for n in range(0, len(path) - 1):
                 common_edges[(path[n], path[n + 1])] += 100 / weight
 
-        # remove = max(common_edges.items(), key=operator.itemgetter(1))[0]
         if show_data:
             for a, b, in common_edges:
                 print(str((a, b)) + ": " + str(common_edges[(a, b)]))
-            #print(remove)
 
-        return common_edges #remove, common_edges
+        return common_edges
 
     else:
         common_nodes = defaultdict(lambda: 0)
@@ -139,14 +176,11 @@ def k_short_path_heuristic(G, s, t, k=10, edge=True, show_data=False):
                 break
             if show_data:
                 print(path_and_weight(G, path))
-            #print(path)
             path, weight = path_and_weight(G, path)
             for node in path[1:-1]:
                 common_nodes[node] += 100 / weight
 
-        #removal_node = max(common_nodes.items(), key=operator.itemgetter(1))[0]
-
-        return common_nodes #removal_node, common_nodes
+        return common_nodes
 
 
 def generate_rand_graph(n, path):
@@ -167,7 +201,7 @@ def make_valid_graph(n, path):
 if __name__ == '__main__':
     assert len(sys.argv) == 2
     path = sys.argv[1]
-    if(path == "all"):
+    if path == "all":
 
         best_sols = get_best_sols_data()
 
@@ -179,7 +213,7 @@ if __name__ == '__main__':
                     input_file = f'inputs/{folder}/{graph_name}.in'
                     output_file = f'outputs/{folder}/{graph_name}.out'
 
-                    if(best_sols[graph_name]['ranking'] == 1):
+                    if best_sols[graph_name]['ranking'] == 1:
                         continue
 
                     best_score = best_sols[graph_name]['score']
@@ -188,20 +222,31 @@ if __name__ == '__main__':
                     score_change = False
                     G = read_input_file(input_file)
 
-
-                    for i in range(10):
-                        for j in range(10):
-                            print((i, j))
-                            c, k = solve(G.copy(), i, j)
+                    for i in range(1, 6):
+                        for b in range(8):
+                            # 000, 001, 010, 011, 100, 101, 110, 111
+                            c, k = solve(G.copy(), 3*i, 3*i, b)
                             new_score = calculate_score(G, c, k)
-                            if(new_score > best_score):
+                            if new_score > best_score:
+                                #print("b was " + str(b) + " and gave improvement")
                                 best_score = new_score
                                 best_c = c
                                 best_k = k
                                 score_change = True
 
 
-                    if(score_change):
+                    # for i in range(10):
+                    #     for j in range(10):
+                    #         print((i, j))
+                    #         c, k = solve(G.copy(), i, j)
+                    #         new_score = calculate_score(G, c, k)
+                    #         if new_score > best_score:
+                    #             best_score = new_score
+                    #             best_c = c
+                    #             best_k = k
+                    #             score_change = True
+
+                    if score_change:
                         write_output_file(G, best_c, best_k, output_file)
                         
                 except Exception:
@@ -210,7 +255,7 @@ if __name__ == '__main__':
     else:
         G = read_input_file(path)
         c, k = solve(G.copy())
-        score= calculate_score(G, c, k)
+        score = calculate_score(G, c, k)
         print(score)
 #     #a = make_valid_graph(8, "a.in")
 #     #print(list(a.edges(data=True)))
