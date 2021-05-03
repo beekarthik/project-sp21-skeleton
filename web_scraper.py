@@ -22,6 +22,6 @@ def get_ranking_dict(url=URL):
         data[name]["ranking"] = int(place)
         print(data[name])
 
-    write_best_sols_data(data, "best_sols.json")
+    return data
 
 get_ranking_dict()

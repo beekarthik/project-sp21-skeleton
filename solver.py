@@ -10,6 +10,7 @@ import heapq
 import operator, math, pprint
 from collections import defaultdict
 import time
+from curr_score import *
 
 
 def path_and_weight(G, path):
@@ -33,7 +34,7 @@ def get_budget(n):
         return 5, 100
 
 
-def solve(G):
+def solve(G, n, e):
     """
     Args:
         G: networkx.Graph
@@ -51,7 +52,7 @@ def solve(G):
     for i in range(node_budget):
         shortest_path = nx.shortest_path(G, s, t, weight="weight", method='dijkstra') # with probability p, skip this path
         shortest_path_as_nodes = shortest_path[1:-1]
-        heuristic = k_short_path_heuristic(G, s, t, k=10, edge=False, show_data=False)
+        heuristic = k_short_path_heuristic(G, s, t, k=n, edge=False, show_data=False)
         artic_points = list(nx.articulation_points(G)) # maybe turn into set for potential speed increase
         #print(artic_points)
 
@@ -74,7 +75,7 @@ def solve(G):
     for i in range(edge_budget):
         shortest_path = nx.shortest_path(G, s, t, weight="weight", method='dijkstra') # with probability p, skip this path
         shortest_path_as_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(0, len(shortest_path) - 1)]
-        heuristic = k_short_path_heuristic(G, s, t, k=10, edge=True)
+        heuristic = k_short_path_heuristic(G, s, t, k=e, edge=True)
 
         edge_removed = False
         while not edge_removed and shortest_path_as_edges:
@@ -166,10 +167,51 @@ def make_valid_graph(n, path):
 if __name__ == '__main__':
     assert len(sys.argv) == 2
     path = sys.argv[1]
-    G = read_input_file(path)
-    c, k = solve(G.copy())
-    score= calculate_score(G, c, k)
-    print(score)
+    if(path == "all"):
+
+        best_sols = get_best_sols_data()
+
+        for folder in os.listdir("inputs"):
+            for file in os.listdir(f'inputs/{folder}'):
+                try:
+                    graph_name = file.split('.')[0]
+                    print(graph_name)
+                    input_file = f'inputs/{folder}/{graph_name}.in'
+                    output_file = f'outputs/{folder}/{graph_name}.out'
+
+                    if(best_sols[graph_name]['ranking'] == 1):
+                        continue
+
+                    best_score = best_sols[graph_name]['score']
+                    best_c = []
+                    best_k = []
+                    score_change = False
+                    G = read_input_file(input_file)
+
+
+                    for i in range(10):
+                        for j in range(10):
+                            print((i, j))
+                            c, k = solve(G.copy(), i, j)
+                            new_score = calculate_score(G, c, k)
+                            if(new_score > best_score):
+                                best_score = new_score
+                                best_c = c
+                                best_k = k
+                                score_change = True
+
+
+                    if(score_change):
+                        write_output_file(G, best_c, best_k, output_file)
+                        
+                except Exception:
+                    continue
+
+    else:
+        G = read_input_file(path)
+        c, k = solve(G.copy())
+        score= calculate_score(G, c, k)
+        print(score)
 #     #a = make_valid_graph(8, "a.in")
 #     #print(list(a.edges(data=True)))
 #     a = read_input_file("inputs/medium/medium-221.in")
