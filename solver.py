@@ -134,27 +134,29 @@ def complete_search(G, iterations):
 if __name__ == '__main__':
     best_sols = get_best_sols_data()
 
-    for file in os.listdir(f'inputs/small'):
-        graph_name = file.split('.')[0]
-        best_score = best_sols[graph_name]['score']
-        if best_score == 1:
-            pass
+  #  for file in os.listdir(f'inputs/small'):
+   #     graph_name = file.split('.')[0]
+    #    best_score = best_sols[graph_name]['score']
+      #  if best_score == 1:
+      #      pass
         # print(graph_name)
-        input_file = f'inputs/small/{graph_name}.in'
-        output_file = f'outputs/small/{graph_name}.out'
-        g = read_input_file(input_file)
-        score, c, k = complete_search_mt(g, 20000)
+     #   input_file = f'inputs/small/{graph_name}.in'
+    #    output_file = f'outputs/small/{graph_name}.out'
+    #    g = read_input_file(input_file)
+   #     score, c, k = complete_search_mt(g, 20000)
 
-        if score > best_score:
-            print("monte carlo gave better score for graph " + str(graph_name))
-            write_output_file(g, c, k, output_file)
+   #     if score > best_score:
+   #         print("monte carlo gave better score for graph " + str(graph_name))
+   #         write_output_file(g, c, k, output_file)
     for file in os.listdir(f'inputs/medium'):
         graph_name = file.split('.')[0]
         if best_sols[graph_name]['ranking'] < 75:
             continue
         #print(graph_name)
-        input_file = f'inputs/small/{graph_name}.in'
-        output_file = f'outputs/small/{graph_name}.out'
+        input_file = f'inputs/medium/{graph_name}.in'
+        output_file = f'outputs/medium/{graph_name}.out'
+        
+        best_score = best_sols[graph_name]['score']
 
         g = read_input_file(input_file)
         score, c, k = complete_search_mt(g, 10000)
