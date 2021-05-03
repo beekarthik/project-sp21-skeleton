@@ -34,7 +34,7 @@ def get_budget(n):
         return 5, 100
 
 
-def solve(G, n, e, b):
+def solve(G, n, e, b, w):
     """
     Args:
         G: networkx.Graph
@@ -50,32 +50,24 @@ def solve(G, n, e, b):
     node_budget, edge_budget = get_budget(G.number_of_nodes())
 
     for i in range(node_budget):
-        if b == 1:
+        if b == 0:  # skip 1
             if i == 0:
                 continue
-        elif b == 2:
-            if i == 1:
-                continue
-        elif b == 3:
+        elif b == 1:  # skip 1 and 2
             if i == 0 or i == 1:
                 continue
-        elif b == 4:
-            if i == 2:
-                continue
-        elif b == 5:
+        elif b == 2:  # skip 1 and 3
             if i == 0 or i == 2:
                 continue
-        elif b == 6:
-            if i == 1 or i == 2:
-                continue
-        elif b == 7:
+        elif b == 3:  # skip 1, 2, and 3
             if i == 0 or i == 1 or i == 2:
                 continue
 
-        shortest_path = nx.shortest_path(G, s, t, weight="weight", method='dijkstra') # with probability p, skip this path
+        shortest_path = nx.shortest_path(G, s, t, weight="weight",
+                                         method='dijkstra')  # with probability p, skip this path
         shortest_path_as_nodes = shortest_path[1:-1]
         heuristic = k_short_path_heuristic(G, s, t, k=n, edge=False, show_data=False)
-        artic_points = list(nx.articulation_points(G)) # maybe turn into set for potential speed increase
+        artic_points = list(nx.articulation_points(G))  # maybe turn into set for potential speed increase
 
         node_removed = False
         while not node_removed and shortest_path_as_nodes:
@@ -93,28 +85,14 @@ def solve(G, n, e, b):
                 shortest_path_as_nodes.remove(target)
 
     for i in range(edge_budget):
-        if b == 1:
-            if i == 1:
+        if w == 1:  # skip 1
+            if i == 0 or i == 1:
                 continue
-        elif b == 2:
-            if i == 2:
+        elif w == 2:  # skip 1 and 2
+            if i == 0 or i == 2:
                 continue
-        elif b == 3:
-            if i == 1 or i == 2:
-                continue
-        elif b == 4:
-            if i == 3:
-                continue
-        elif b == 5:
-            if i == 1 or i == 3:
-                continue
-        elif b == 6:
-            if i == 2 or i == 3:
-                continue
-        elif b == 7:
-            if i == 1 or i == 2 or i == 3:
-                continue
-        shortest_path = nx.shortest_path(G, s, t, weight="weight", method='dijkstra') # with probability p, skip this path
+        shortest_path = nx.shortest_path(G, s, t, weight="weight",
+                                         method='dijkstra')  # with probability p, skip this path
         shortest_path_as_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(0, len(shortest_path) - 1)]
         heuristic = k_short_path_heuristic(G, s, t, k=e, edge=True)
 
@@ -205,6 +183,8 @@ if __name__ == '__main__':
 
         best_sols = get_best_sols_data()
 
+        best_sizes = collections.Counter()
+
         for folder in os.listdir("inputs"):
             for file in os.listdir(f'inputs/{folder}'):
                 try:
@@ -222,18 +202,29 @@ if __name__ == '__main__':
                     score_change = False
                     G = read_input_file(input_file)
 
-                    for i in range(1, 6):
-                        for b in range(8):
-                            # 000, 001, 010, 011, 100, 101, 110, 111
-                            c, k = solve(G.copy(), 3*i, 3*i, b)
-                            new_score = calculate_score(G, c, k)
-                            if new_score > best_score:
-                                #print("b was " + str(b) + " and gave improvement")
-                                best_score = new_score
-                                best_c = c
-                                best_k = k
-                                score_change = True
+                    max_score = 0
 
+                    for i in range(0, 4):
+                        for b in range(4):
+                            for w in range(3):
+                                # 000, 001, 010, 011, 100, 101, 110, 111
+                                j = 1
+                                if i == 0:
+                                    j = 1
+                                else:
+                                    j = 5 * i
+                                c, k = solve(G.copy(), j, j, b, w)
+                                new_score = calculate_score(G, c, k)
+                                if new_score > max_score:
+                                    max_score = new_score
+                                    best_sizes[j] += 1
+
+                                if new_score > best_score:
+                                    # print("b: " + str(b) + ", w: " + str(w) + " gave improvement")
+                                    best_score = new_score
+                                    best_c = c
+                                    best_k = k
+                                    score_change = True
 
                     # for i in range(10):
                     #     for j in range(10):
@@ -248,9 +239,10 @@ if __name__ == '__main__':
 
                     if score_change:
                         write_output_file(G, best_c, best_k, output_file)
-                        
+
                 except Exception:
                     continue
+        print(best_sizes)
 
     else:
         G = read_input_file(path)
@@ -266,7 +258,7 @@ if __name__ == '__main__':
 #     assert is_valid_solution(a, c, k)
 #     print("Shortest Path Difference: {}".format(calculate_score(a, c, k)))
 
-    # write_output_file(G, c, k, 'outputs/small-1.out')
+# write_output_file(G, c, k, 'outputs/small-1.out')
 
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
