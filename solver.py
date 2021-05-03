@@ -3,6 +3,7 @@ import networkx as nx
 
 from utils import *
 from parse import *
+from best_score import *
 
 import random
 from tqdm import tqdm, trange
@@ -126,7 +127,40 @@ def complete_search(G, iterations):
                 n_updates += 1
                 status.set_description(f"Max Score {max_score} out of {n_updates}")
 
+
     return max_c, max_k
 
+
 if __name__ == '__main__':
-    print(complete_search_mt(read_input_file('inputs/medium/medium-161.in'), 10000))
+    best_sols = get_best_sols_data()
+
+    for file in os.listdir(f'inputs/small'):
+        graph_name = file.split('.')[0]
+        best_score = best_sols[graph_name]['score']
+        if best_score == 1:
+            pass
+        # print(graph_name)
+        input_file = f'inputs/small/{graph_name}.in'
+        output_file = f'outputs/small/{graph_name}.out'
+        g = read_input_file(input_file)
+        score, c, k = complete_search_mt(g, 10000)
+
+        if score > best_score:
+            print("monte carlo gave better score for graph " + str(graph_name))
+            write_output_file(g, c, k, output_file)
+    for file in os.listdir(f'inputs/medium'):
+        graph_name = file.split('.')[0]
+        if best_sols[graph_name]['ranking'] < 75:
+            continue
+        #print(graph_name)
+        input_file = f'inputs/small/{graph_name}.in'
+        output_file = f'outputs/small/{graph_name}.out'
+
+        g = read_input_file(input_file)
+        score, c, k = complete_search_mt(g, 10000)
+
+        if score > best_score:
+            print("monte carlo gave better score for graph " + str(graph_name))
+            write_output_file(g, c, k, output_file)
+
+    print(complete_search_mt(read_input_file('inputs/small/small-1.in'), 10000))
