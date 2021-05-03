@@ -206,7 +206,7 @@ def meta_heuristic_bash(folder, file):
 
 
                     if new_score > best_score:
-                        print("b: " + str(b) + ", w: " + str(w) + " gave improvement")
+                        print("b: " + str(b) + ", w: " + str(w) + " gave improvement " + str(new_score-best_score))
                         best_score = new_score
                         best_c = c
                         best_k = k
