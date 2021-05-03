@@ -236,8 +236,6 @@ if __name__ == '__main__':
 
         pool = Pool()
         for folder in os.listdir("inputs"):
-            if(folder != 'medium'):
-                continue
             for file in os.listdir(f'inputs/{folder}'):
                 try:
                     pool.apply_async(meta_heuristic_bash, [folder, file])
