@@ -129,4 +129,4 @@ def complete_search(G, iterations):
     return max_c, max_k
 
 if __name__ == '__main__':
-    print(complete_search_mt(read_input_file('inputs/small/small-161.in'), 10000))
+    print(complete_search_mt(read_input_file('inputs/medium/medium-161.in'), 10000))
