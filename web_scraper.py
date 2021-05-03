@@ -7,21 +7,18 @@ URL = "http://berkeley-cs170.github.io/project-leaderboard-sp21/?team=cashmoneya
 
 
 
-def get_ranking_dict(url=URL):
+def get_ranking_dict(data):
 
     file = open("leaderboard.html")
     soup = BeautifulSoup(file, 'html.parser')
     rows = soup.find_all('tr')[1:]
 
-    data = get_best_sols_data("best_sols.json")
-
-
     for r in rows:
         name = r.contents[1].text
         place = r.contents[3].text
         data[name]["ranking"] = int(place)
-        print(data[name])
+        print(name)
 
     return data
 
-get_ranking_dict()
+write_best_sols_data(get_ranking_dict(calculate_best_scores()))
