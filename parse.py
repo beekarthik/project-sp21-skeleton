@@ -50,10 +50,10 @@ def read_input_file(path, min_size=None, max_size=None):
 
         for node, val in G.degree():
             assert val >= 2, 'Every vertex in the input graph should have degree atleast 2'
-            
+
         if min_size is not None:
             assert min_size < len(G), 'Graph doesn\'t have enough nodes for it\'s size'
-            
+
         if max_size is not None:
             assert len(G) <= max_size, 'Graph has too many nodes for it\'s size'
 
@@ -154,7 +154,7 @@ def write_output_file(G, c, k, path):
     for road in k:
         assert H.has_edge(road[0],road[1]), "{} is not a valid edge in graph G".format(road)
     H.remove_edges_from(k)
-    
+
     for city in c:
         assert H.has_node(city), "{} is not a valid node in graph G".format(city)
     H.remove_nodes_from(c)
