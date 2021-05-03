@@ -228,7 +228,7 @@ if __name__ == '__main__':
                             c, k = solve(G.copy(), 3*i, 3*i, b)
                             new_score = calculate_score(G, c, k)
                             if new_score > best_score:
-                                #print("b was " + str(b) + " and gave improvement")
+                                print("b was " + str(b) + " and gave improvement " + str(new_score-best_score))
                                 best_score = new_score
                                 best_c = c
                                 best_k = k
@@ -248,7 +248,7 @@ if __name__ == '__main__':
 
                     if score_change:
                         write_output_file(G, best_c, best_k, output_file)
-                        
+
                 except Exception:
                     continue
 
