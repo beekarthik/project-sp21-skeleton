@@ -200,7 +200,7 @@ def meta_heuristic_bash(folder, file):
                     if i == 0:
                         j = 1
                     else:
-                        j = 5 * i
+                        j = 10 * i
                     c, k = solve(G.copy(), j, j, b, w)
                     new_score = calculate_score(G, c, k)
 
@@ -236,6 +236,8 @@ if __name__ == '__main__':
 
         pool = Pool()
         for folder in os.listdir("inputs"):
+            if(folder != "small"):
+                continue
             for file in os.listdir(f'inputs/{folder}'):
                 try:
                     pool.apply_async(meta_heuristic_bash, [folder, file])
