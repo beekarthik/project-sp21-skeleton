@@ -170,7 +170,7 @@ def complete_search(G, iterations):
 
 
 if __name__ == '__main__':
-    hyperspecific = "small-167"
+    hyperspecific = "small-172"
     input_file = f'inputs/small/' + hyperspecific + '.in'
     output_file = f'outputs/small/' + hyperspecific + '.out'
 
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     score = calculate_score(g, c, k)
     print(score)
 
-    lt = 243.88
+    lt = 909.991
     if score > lt:
         print("we got em: " + str(score - lt))
         write_output_file(g, c, k, output_file)
