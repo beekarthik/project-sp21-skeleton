@@ -88,6 +88,44 @@ def complete_search_mt(G, iterations, BLOCK_SIZE=256):
     return max_score, max_c, max_k
 
 
+def stupid_greedy(g):
+    node_budget, edge_budget = get_budget(g.number_of_nodes())
+    artic_points = nx.articulation_points(g)
+    removable_nodes = set(filter(lambda x: x not in artic_points, list(
+        np.arange(g.number_of_nodes())[1:-1])))
+    influentual_nodes = nx.voterank(g)
+    c, k = [], []
+
+    num_nodes_removed = 0
+    for node in influentual_nodes:
+        if num_nodes_removed < node_budget:
+            if node == 0 or node == g.number_of_nodes() - 1:
+                continue
+            if node in removable_nodes:
+                g.remove_node(node)
+                c.append(node)
+                num_nodes_removed += 1
+
+    print(c)
+    num_edges_removed = 0
+    print(g.edges(data=True))
+    priority_edges = sorted(g.edges, key=lambda x: g.edges[x]['weight'], reverse=False)
+    for edge in priority_edges:
+        if num_edges_removed < edge_budget:
+            g.remove_edge(edge[0], edge[1])
+            k.append(edge)
+
+            if not nx.is_connected(g):
+                g.add_edge(edge[0], edge[1], weight=edge[-1])
+                k.remove(edge)
+            else:
+                num_edges_removed += 1
+
+    print(k)
+    return c, k
+
+
+
 def complete_search(G, iterations):
     node_budget, edge_budget = get_budget(G.number_of_nodes())
     source, target = 0, G.number_of_nodes() - 1
@@ -103,6 +141,7 @@ def complete_search(G, iterations):
         # longest_path = longest_simple_paths(G, source, target)
         _G = G.copy()
         c, k = [], []
+
 
         # randomized algorithm
         removed_nodes = random.sample(removable_nodes, node_budget)
@@ -127,12 +166,30 @@ def complete_search(G, iterations):
                 n_updates += 1
                 status.set_description(f"Max Score {max_score} out of {n_updates}")
 
-
-    return max_c, max_k
+    return max_score, max_c, max_k
 
 
 if __name__ == '__main__':
+    hyperspecific = "small-181"
+    input_file = f'inputs/small/' + hyperspecific + '.in'
+    output_file = f'outputs/small/' + hyperspecific + '.out'
+
     best_sols = get_best_sols_data()
+    best_score = best_sols[hyperspecific]['score']
+    print(best_score)
+
+    g = read_input_file(input_file)
+
+    # s = read_output_file(g, output_file)
+    # print(s)
+
+    score, c, k = complete_search_mt(g.copy(), 2097152, 1024)
+    score = calculate_score(g, c, k)
+    print(score)
+
+    if score > 88.536:
+        print("we got em: " + str(score - 88.536))
+        write_output_file(g, c, k, output_file)
 
   #  for file in os.listdir(f'inputs/small'):
    #     graph_name = file.split('.')[0]
@@ -144,24 +201,3 @@ if __name__ == '__main__':
     #    output_file = f'outputs/small/{graph_name}.out'
     #    g = read_input_file(input_file)
    #     score, c, k = complete_search_mt(g, 20000)
-
-   #     if score > best_score:
-   #         print("monte carlo gave better score for graph " + str(graph_name))
-   #         write_output_file(g, c, k, output_file)
-    for file in os.listdir(f'inputs/medium'):
-        graph_name = file.split('.')[0]
-        if best_sols[graph_name]['ranking'] < 75:
-            continue
-        #print(graph_name)
-        input_file = f'inputs/medium/{graph_name}.in'
-        output_file = f'outputs/medium/{graph_name}.out'
-        
-        best_score = best_sols[graph_name]['score']
-
-        g = read_input_file(input_file)
-        score, c, k = complete_search_mt(g, 10000)
-
-        if score > best_score:
-            print("monte carlo gave better score for graph " + str(graph_name))
-            write_output_file(g, c, k, output_file)
-
