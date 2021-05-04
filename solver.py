@@ -170,7 +170,7 @@ def complete_search(G, iterations):
 
 
 if __name__ == '__main__':
-    hyperspecific = "small-181"
+    hyperspecific = "small-167"
     input_file = f'inputs/small/' + hyperspecific + '.in'
     output_file = f'outputs/small/' + hyperspecific + '.out'
 
@@ -183,12 +183,12 @@ if __name__ == '__main__':
     # s = read_output_file(g, output_file)
     # print(s)
 
-    score, c, k = complete_search_mt(g.copy(), 2097152, 1024)
+    score, c, k = complete_search_mt(g.copy(), 2*2097152, 1024)
     score = calculate_score(g, c, k)
     print(score)
 
-    if score > 88.536:
-        print("we got em: " + str(score - 88.536))
+    if score > 243.87999999999994:
+        print("we got em: " + str(score - 243.87999999999994))
         write_output_file(g, c, k, output_file)
 
   #  for file in os.listdir(f'inputs/small'):
