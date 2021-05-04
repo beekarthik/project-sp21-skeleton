@@ -1,22 +1,22 @@
 # CS 170 Project Spring 2021
 
-Take a look at the project spec before you get started!
 
-Requirements:
+## How to reproduce
 
-Python 3.6+
-
-You'll only need to install networkx to work with the starter code. For installation instructions, follow: https://networkx.github.io/documentation/stable/install.html
-
-If using pip to download, run `python3 -m pip install networkx`
+- If submission already exists, copy the html table of our teams performance from the website into `leaderboard.html`
+- Then run `python3 web_scraper.py` which uses both `curr_score.py` and `utils.py` to parse the `leaderboard.html` data and store the solution, score, and rank for each graph and write it to `best_sols.json`
 
 
-Files:
-- `parse.py`: functions to read/write inputs and outputs
-- `solver.py`: where you should be writing your code to solve inputs
-- `utils.py`: contains functions to compute cost and validate NetworkX graphs
 
-When writing inputs/outputs:
-- Make sure you use the functions `write_input_file` and `write_output_file` provided
-- Run the functions `read_input_file` and `read_output_file` to validate your files before submitting!
-  - These are the functions run by the autograder to validate submissions
+- Then run `python3 solver.py all` which will run our solver that is based on looking at the k-shortest paths and being quasi-greedy
+- If `best_sols.json` has been created then this function skips any file that has already achieved rank 1. This massively improves performance as we do not waste time recomputing good solutions
+- Finally run `python3 random_solver.py all` which tries to solve the problem using a fixed iteration count and good old fashioned randomness - this was primarily used for hammering out small and medium inputs
+
+The above steps run all the code we tried at once when in reality we ran it chunk by chunk, varying only one hyperparameter at a time and trying to score as many rank 1 paths so that computation could be saved.
+
+
+## Resources Used
+- Google Cloud Compute - got a free account and used an 8cpu machine for 15 hours total. Google billed ~$10.00
+- multiprocessing library - allowed us to maximize google cloud compute VM
+- defaultdict - using this allows us to not worry about checking for existence which is always annoying
+- BeautifulSoup - allowed us to parse our leaderboard table and maintain rankings which helped us save time

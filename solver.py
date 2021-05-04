@@ -195,27 +195,29 @@ def meta_heuristic_bash(folder, file):
 
         for i in range(0, 8):
             for j in range(0, 4):
-                c, k = solve(G.copy(), 3, 3, i, j)
-                new_score = calculate_score(G, c, k)
+                for n in range(0, 10):
+                    for e in range(0, 10):
+                        c, k = solve(G.copy(), n, e, i, j)
+                        new_score = calculate_score(G, c, k)
 
-                if new_score > best_score:
-                    # print("i: " + str(i) + ", j: " + str(j) + " gave improvement " + str(new_score - best_score))
-                    best_score = new_score
-                    best_c = c
-                    best_k = k
-                    score_change = True
+                        if new_score > best_score:
+                            # print("i: " + str(i) + ", j: " + str(j) + " gave improvement " + str(new_score - best_score))
+                            best_score = new_score
+                            best_c = c
+                            best_k = k
+                            score_change = True
 
-                c, k = solve(G.copy(), 12, 8, i, j)
-                new_score = calculate_score(G, c, k)
+                        c, k = solve(G.copy(), 2*n, 2*e, i, j)
+                        new_score = calculate_score(G, c, k)
 
-                if new_score > best_score:
-                    # print("i: " + str(i) + ", j: " + str(j) + " gave improvement " + str(new_score - best_score))
-                    best_score = new_score
-                    best_c = c
-                    best_k = k
-                    score_change = True
-        if score_change:
-            write_output_file(G, best_c, best_k, output_file)
+                        if new_score > best_score:
+                            # print("i: " + str(i) + ", j: " + str(j) + " gave improvement " + str(new_score - best_score))
+                            best_score = new_score
+                            best_c = c
+                            best_k = k
+                            score_change = True
+                if score_change:
+                    write_output_file(G, best_c, best_k, output_file)
 
 
 if __name__ == '__main__':
@@ -225,8 +227,6 @@ if __name__ == '__main__':
 
         pool = Pool()
         for folder in os.listdir("inputs"):
-            # if folder != "small": # only run on small inputs for now
-            #     continue
             for file in os.listdir(f'inputs/{folder}'):
                 try:
                     pool.apply_async(meta_heuristic_bash, [folder, file])
@@ -241,6 +241,3 @@ if __name__ == '__main__':
         c, k = solve(G.copy())
         score = calculate_score(G, c, k)
         print(score)
-
-    print("writing answers")
-    write_best_sols_data(calculate_best_scores())
