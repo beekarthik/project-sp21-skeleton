@@ -38,6 +38,10 @@ def solve(G, n, e, b, w):
     """
     Args:
         G: networkx.Graph
+        n: heuristic num paths for nodes
+        e: heuristic num paths for edges
+        b: skip first b shortest paths for nodes
+        w: skip first w shortest paths for edges
     Returns:
         c: list of cities to remove
         k: list of edges to remove
@@ -48,23 +52,19 @@ def solve(G, n, e, b, w):
     k = []
 
     node_budget, edge_budget = get_budget(G.number_of_nodes())
+    short_path_generator = nx.shortest_simple_paths(G, s, t, weight="weight")
+    try:
+        for i in range(b):
+            next(short_path_generator)
+    except StopIteration:
+        pass
 
     for i in range(node_budget):
-        if b == 0:  # skip 1
-            if i == 0:
-                continue
-        elif b == 1:  # skip 1 and 2
-            if i == 0 or i == 1:
-                continue
-        elif b == 2:  # skip 1 and 3
-            if i == 0 or i == 2:
-                continue
-        elif b == 3:  # skip 1, 2, and 3
-            if i == 0 or i == 1 or i == 2:
-                continue
+        try:
+            shortest_path = next(short_path_generator)
+        except StopIteration:
+            break
 
-        shortest_path = nx.shortest_path(G, s, t, weight="weight",
-                                         method='dijkstra')  # with probability p, skip this path
         shortest_path_as_nodes = shortest_path[1:-1]
         heuristic = k_short_path_heuristic(G, s, t, k=n, edge=False, show_data=False)
         artic_points = list(nx.articulation_points(G))  # maybe turn into set for potential speed increase
@@ -74,25 +74,28 @@ def solve(G, n, e, b, w):
             if not shortest_path_as_nodes:
                 break
             target = max(shortest_path_as_nodes, key=lambda x: heuristic[x])
-            if target not in artic_points:
+            if target not in artic_points:      # do not remove node
                 node_removed = True
                 G.remove_node(target)
                 c.append(target)
                 # assert nx.is_connected(G), 'should still be connected' # REMOVE THIS LINE eventually
                 assert target != s, 'cannot remove source'
                 assert target != t, 'cannot remove sink'
-            else:
+            else:                               # remove node
                 shortest_path_as_nodes.remove(target)
+        short_path_generator = nx.shortest_simple_paths(G, s, t, weight="weight")       # regenerate generator
+
+    try:
+        for i in range(w):
+            next(short_path_generator)
+    except StopIteration:
+        pass
 
     for i in range(edge_budget):
-        if w == 1:  # skip 1
-            if i == 0 or i == 1:
-                continue
-        elif w == 2:  # skip 1 and 2
-            if i == 0 or i == 2:
-                continue
-        shortest_path = nx.shortest_path(G, s, t, weight="weight",
-                                         method='dijkstra')  # with probability p, skip this path
+        try:
+            shortest_path = next(short_path_generator)
+        except StopIteration:
+            break
         shortest_path_as_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(0, len(shortest_path) - 1)]
         heuristic = k_short_path_heuristic(G, s, t, k=e, edge=True)
 
@@ -107,6 +110,7 @@ def solve(G, n, e, b, w):
                 k.append(target)
             else:
                 G.add_edge(target[0], target[1], weight=weight)
+        short_path_generator = nx.shortest_simple_paths(G, s, t, weight="weight")       # regenerate generator
 
     return c, k
 
@@ -160,7 +164,6 @@ def k_short_path_heuristic(G, s, t, k=10, edge=True, show_data=False):
 
         return common_nodes
 
-
 def generate_rand_graph(n, path):
     G = nx.dense_gnm_random_graph(n, random.randint(0, n * (n - 1) / 2))
     for (u, v, w) in G.edges(data=True):
@@ -182,51 +185,37 @@ def meta_heuristic_bash(folder, file):
         input_file = f'inputs/{folder}/{graph_name}.in'
         output_file = f'outputs/{folder}/{graph_name}.out'
 
-        if best_sols[graph_name]['ranking'] == 1:
-            return
-
         best_score = best_sols[graph_name]['score']
         best_c = []
         best_k = []
         score_change = False
         G = read_input_file(input_file)
 
+        """skipping first 1 thru 7 paths"""
 
-        for i in range(0, 4):
-            for b in range(4):
-                for w in range(3):
-                    # 000, 001, 010, 011, 100, 101, 110, 111
-                    j = 1
-                    if i == 0:
-                        j = 1
-                    else:
-                        j = 10 * i
-                    c, k = solve(G.copy(), j, j, b, w)
-                    new_score = calculate_score(G, c, k)
+        for i in range(0, 8):
+            for j in range(0, 4):
+                c, k = solve(G.copy(), 3, 3, i, j)
+                new_score = calculate_score(G, c, k)
 
+                if new_score > best_score:
+                    # print("i: " + str(i) + ", j: " + str(j) + " gave improvement " + str(new_score - best_score))
+                    best_score = new_score
+                    best_c = c
+                    best_k = k
+                    score_change = True
 
-                    if new_score > best_score:
-                        print("b: " + str(b) + ", w: " + str(w) + " gave improvement " + str(new_score-best_score))
-                        best_score = new_score
-                        best_c = c
-                        best_k = k
-                        score_change = True
+                c, k = solve(G.copy(), 12, 8, i, j)
+                new_score = calculate_score(G, c, k)
 
-        # for i in range(10):
-        #     for j in range(10):
-        #         print((i, j))
-        #         c, k = solve(G.copy(), i, j)
-        #         new_score = calculate_score(G, c, k)
-        #         if new_score > best_score:
-        #             best_score = new_score
-        #             best_c = c
-        #             best_k = k
-        #             score_change = True
-
+                if new_score > best_score:
+                    # print("i: " + str(i) + ", j: " + str(j) + " gave improvement " + str(new_score - best_score))
+                    best_score = new_score
+                    best_c = c
+                    best_k = k
+                    score_change = True
         if score_change:
             write_output_file(G, best_c, best_k, output_file)
-
-
 
 
 if __name__ == '__main__':
@@ -236,8 +225,8 @@ if __name__ == '__main__':
 
         pool = Pool()
         for folder in os.listdir("inputs"):
-            if(folder != "small"):
-                continue
+            # if folder != "small": # only run on small inputs for now
+            #     continue
             for file in os.listdir(f'inputs/{folder}'):
                 try:
                     pool.apply_async(meta_heuristic_bash, [folder, file])
@@ -252,31 +241,6 @@ if __name__ == '__main__':
         c, k = solve(G.copy())
         score = calculate_score(G, c, k)
         print(score)
-#     #a = make_valid_graph(8, "a.in")
-#     #print(list(a.edges(data=True)))
-#     a = read_input_file("inputs/medium/medium-221.in")
-#     plot_graph(a)
-#
-#     c, k = solve(a.copy())
-#     assert is_valid_solution(a, c, k)
-#     print("Shortest Path Difference: {}".format(calculate_score(a, c, k)))
 
-# write_output_file(G, c, k, 'outputs/small-1.out')
-
-
-# For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
-# if __name__ == '__main__':
-#     inputs = glob.glob('inputs/large/*')
-#     counter = 1
-#     t0 = time.time()
-#     for input_path in inputs:
-#         print("reading graph " + str(counter) + "/300")
-#         output_path = 'outputs/large/' + basename(normpath(input_path))[:-3] + '.out'
-#         G = read_input_file(input_path)
-#         c, k = solve(G.copy())
-#         assert is_valid_solution(G, c, k)
-#         distance = calculate_score(G, c, k)
-#         write_output_file(G, c, k, output_path)
-#         counter += 1
-#         if counter % 50 == 0:
-#             print(str(time.time() - t0) + " seconds elapsed.")
+    print("writing answers")
+    write_best_sols_data(calculate_best_scores())

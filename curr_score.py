@@ -16,7 +16,7 @@ def calculate_best_scores():
     for folder in os.listdir("inputs"):
         for file in os.listdir(f'inputs/{folder}'):
             graph_name = file.split('.')[0]
-            print(graph_name)
+            #print(graph_name)
             output_file = f'outputs/{folder}/{graph_name}.out'
             try:
                 G = parse.read_input_file(f'inputs/{folder}/{graph_name}.in')
